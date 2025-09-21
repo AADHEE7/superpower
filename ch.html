@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono-Mage vs. The Time Dragon</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        :root {
+            --primary-glow: #6a5acd;
+            --primary-bg: #1a1a2e;
+            --text-color: #d1d1f0;
+            --background-gradient: linear-gradient(135deg, #0a0a1a, #1a1a33);
+            --boss-glow: #ff4500;
+            --boss-gradient: linear-gradient(135deg, #2a0a0a, #4d1a1a);
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: var(--background-gradient);
+            color: var(--text-color);
+            text-align: center;
+            overflow: hidden;
+            transition: background 1s ease-in-out;
+        }
+
+        body.boss-mode {
+            background: var(--boss-gradient);
+        }
+
+        .game-container {
+            background-color: var(--primary-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7);
+            width: 90%;
+            max-width: 700px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: warpIn 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+            border: 3px solid transparent;
+            transition: box-shadow 1s, border-color 1s;
+        }
+        
+        body.boss-mode .game-container {
+            box-shadow: 0 0 40px var(--boss-glow);
+            border-color: var(--boss-glow);
+        }
+
+        @keyframes warpIn {
+            0% { transform: scale(0.8) translateY(-50px) rotateX(15deg); opacity: 0; }
+            100% { transform: scale(1) translateY(0) rotateX(0deg); opacity: 1; }
+        }
+
+        h1 {
+            color: var(--primary-glow);
+            font-size: 2.5em;
+            text-shadow: 0 0 15px var(--primary-glow);
+            margin-bottom: 20px;
+            transition: color 1s, text-shadow 1s;
+        }
+
+        body.boss-mode h1 {
+            color: var(--boss-glow);
+            text-shadow: 0 0 15px var(--boss-glow);
+        }
+
+        .story-area {
+            font-size: 1.1em;
+            color: #b3b3e6;
+            min-height: 40px;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            background-color: #2b2b3f;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 10px;
+            background: linear-gradient(90deg, #6a5acd, #9370db);
+            border-radius: 10px;
+            transition: width 0.5s ease-out, background 1s;
+        }
+        body.boss-mode .progress-bar {
+            background: linear-gradient(90deg, #ff6347, #ff4500);
+        }
+
+        .mana-display {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #9370db;
+        }
+
+        .problem-area {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .fraction-group { display: inline-block; margin: 0 15px; position: relative; }
+        .fraction-line { display: block; border-bottom: 4px solid var(--text-color); padding-bottom: 5px; margin: 0; line-height: 0; }
+        .fraction-numerator, .fraction-denominator { display: block; font-size: 0.8em; margin: 0; padding: 0 5px; }
+        .operator { font-size: 1em; padding: 0 10px; color: var(--text-color); }
+
+        .input-area { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+
+        #user-answer { padding: 15px; border: 2px solid #3d3b51; border-radius: 10px; background-color: #2b2b3f; color: var(--text-color); font-size: 1.2em; outline: none; text-align: center; width: 200px; transition: border-color 0.3s, box-shadow 0.3s; }
+        #user-answer::placeholder { color: #8c8cbe; }
+        #user-answer:focus { border-color: var(--primary-glow); box-shadow: 0 0 10px rgba(106, 90, 205, 0.5); }
+        body.boss-mode #user-answer:focus { border-color: var(--boss-glow); box-shadow: 0 0 10px rgba(255, 69, 0, 0.5); }
+
+
+        .game-btn { padding: 15px 30px; border: none; border-radius: 10px; font-size: 1.2em; cursor: pointer; transition: transform 0.2s, background-color 0.3s; color: white; font-family: 'Orbitron', sans-serif; text-transform: uppercase; }
+        .game-btn:hover { transform: translateY(-3px); }
+
+        #submit-btn { background-color: #5d3fd3; }
+        #submit-btn:hover { background-color: #4a32b8; }
+        #submit-btn:disabled { background-color: #3d3b51; cursor: not-allowed; }
+
+
+        #rewind-btn { background-color: #ff6347; opacity: 0.6; cursor: not-allowed; }
+        #rewind-btn:not([disabled]) { opacity: 1; cursor: pointer; animation: pulseRewind 1s infinite; }
+        #rewind-btn:not([disabled]):hover { background-color: #d84a32; }
+
+        @keyframes pulseRewind { 0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 99, 71, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 99, 71, 1); } }
+
+        .feedback-area { height: 40px; font-size: 1.3em; font-weight: bold; }
+        #feedback-message.correct { color: #4CAF50; text-shadow: 0 0 10px #4CAF50; animation: flashCorrect 0.8s ease-in-out; }
+        #feedback-message.incorrect { color: #e57373; text-shadow: 0 0 10px #e57373; animation: shake 0.5s; }
+        @keyframes flashCorrect { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+
+        .victory-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 26, 0.9);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; animation: fadeIn 1s;
+        }
+        .victory-box { padding: 50px; background-color: #1a1a33; border-radius: 20px; box-shadow: 0 0 50px #4CAF50; }
+        .victory-box h2 { font-size: 3em; color: #4CAF50; text-shadow: 0 0 20px #4CAF50; }
+        .victory-box p { font-size: 1.5em; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Styles for the new Video Overlay */
+        .video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 200; /* High z-index to be on top of everything */
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 id="game-title">Chrono-Mage vs. The Time Dragon</h1>
+        
+        <div class="story-area" id="story-text">
+            You are a Chrono-Mage, honing your skills to face the Time Dragon. Solve the equations to gather mana.
+        </div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+
+        <div class="mana-display">
+            Mana: <span id="mana-count">0</span>
+        </div>
+
+        <div class="problem-area">
+            <span class="fraction-group" id="fraction1"></span>
+            <span class="operator">+</span>
+            <span class="fraction-group" id="fraction2"></span>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="user-answer" placeholder="e.g. 3/4">
+            <button class="game-btn" id="submit-btn">Cast Spell</button>
+        </div>
+
+        <div class="feedback-area">
+            <p id="feedback-message"></p>
+        </div>
+
+        <div class="superpower-area">
+            <button class="game-btn" id="rewind-btn" disabled>Chrono-Shift</button>
+        </div>
+    </div>
+
+    <div class="video-overlay" id="video-overlay" style="display: none;">
+        <video id="video-player" width="90%" height="90%">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <script>
+        // Game State and Constants
+        let mana = 0;
+        let problemHistory = [];
+        let currentProblem = null;
+        let currentQuestionNumber = 0;
+        const TOTAL_QUESTIONS = 10;
+        const BOSS_LEVEL_START = 7; 
+
+        const MANA_PER_CORRECT_ANSWER = 15;
+        const REWIND_COST = 50;
+        const MANA_PENALTY = 5;
+
+        // DOM Elements
+        const manaCountEl = document.getElementById('mana-count');
+        const feedbackMessageEl = document.getElementById('feedback-message');
+        const userAnswerInput = document.getElementById('user-answer');
+        const submitBtn = document.getElementById('submit-btn');
+        const rewindBtn = document.getElementById('rewind-btn');
+        const storyTextEl = document.getElementById('story-text');
+        const progressBarEl = document.getElementById('progress-bar');
+        const gameContainer = document.querySelector('.game-container');
+        const videoOverlay = document.getElementById('video-overlay');
+        const videoPlayer = document.getElementById('video-player');
+
+
+        // Creates the HTML for a fraction
+        function createFractionElement(numerator, denominator) {
+            return `
+                <div class="fraction-line">
+                    <span class="fraction-numerator">${numerator}</span>
+                </div>
+                <span class="fraction-denominator">${denominator}</span>
+            `;
+        }
+        
+        // Updates the progress bar and story text
+        function updateProgress() {
+            const progressPercent = (currentQuestionNumber / TOTAL_QUESTIONS) * 100;
+            progressBarEl.style.width = `${progressPercent}%`;
+
+            if (currentQuestionNumber < BOSS_LEVEL_START) {
+                storyTextEl.textContent = `You are training your mind. ${TOTAL_QUESTIONS - currentQuestionNumber} challenges remain until the Dragon.`;
+            } else {
+                storyTextEl.innerHTML = `The Time Dragon's Lair! Its temporal roar echoes! Solve these final challenges!`;
+            }
+        }
+        
+        // Triggers the UI change for the boss fight
+        function triggerBossMode() {
+            document.body.classList.add('boss-mode');
+            submitBtn.textContent = "Final Strike";
+        }
+
+        // --- NEW VIDEO PLAYER FUNCTION ---
+        function playVideo(videoSrc, onEndedCallback) {
+            submitBtn.disabled = true; // Disable button while video plays
+            gameContainer.style.display = 'none';
+            videoOverlay.style.display = 'flex';
+            videoPlayer.src = videoSrc;
+            videoPlayer.play();
+
+            const onVideoEnd = () => {
+                videoOverlay.style.display = 'none';
+                videoPlayer.removeEventListener('ended', onVideoEnd); // Clean up the event listener
+
+                if (onEndedCallback) {
+                    onEndedCallback();
+                }
+                submitBtn.disabled = false; // Re-enable button after video
+            };
+
+            videoPlayer.addEventListener('ended', onVideoEnd);
+        }
+
+        // Generates a new problem based on game progress
+        function generateProblem() {
+            let num1, num2, den1, den2;
+            let problemType = 'same'; 
+
+            if (currentQuestionNumber >= BOSS_LEVEL_START) {
+                problemType = 'different';
+            } else {
+                problemType = Math.random() < 0.7 ? 'same' : 'different';
+            }
+
+            if (problemType === 'same') {
+                den1 = den2 = Math.floor(Math.random() * 8) + 3; 
+                num1 = Math.floor(Math.random() * (den1 - 1)) + 1;
+                num2 = Math.floor(Math.random() * (den2 - 1)) + 1;
+                while (num1 + num2 >= den1) {
+                    num1 = Math.floor(Math.random() * (den1 - 1)) + 1;
+                    num2 = Math.floor(Math.random() * (den2 - 1)) + 1;
+                }
+            } else { 
+                den1 = Math.floor(Math.random() * 5) + 2; 
+                den2 = Math.floor(Math.random() * 5) + 3; 
+                while (den1 === den2) {
+                    den2 = Math.floor(Math.random() * 5) + 3;
+                }
+                num1 = Math.floor(Math.random() * (den1 - 1)) + 1;
+                num2 = Math.floor(Math.random() * (den2 - 1)) + 1;
+            }
+
+            document.getElementById('fraction1').innerHTML = createFractionElement(num1, den1);
+            document.getElementById('fraction2').innerHTML = createFractionElement(num2, den2);
+
+            currentProblem = { num1, den1, num2, den2, type: problemType };
+            problemHistory.push(currentProblem);
+
+            feedbackMessageEl.textContent = '';
+            userAnswerInput.value = '';
+            userAnswerInput.focus();
+        }
+
+        function showVictoryScreen() {
+            playVideo('video3.mp4', () => {
+                // After the final video, show the victory text overlay
+                document.body.innerHTML = ''; // Clear the body
+                const victoryOverlay = document.createElement('div');
+                victoryOverlay.classList.add('victory-overlay');
+                victoryOverlay.innerHTML = `
+                    <div class="victory-box">
+                        <h2>VICTORY!</h2>
+                        <p>The Time Dragon has been vanquished! Your mastery has restored temporal peace.</p>
+                    </div>
+                `;
+                document.body.appendChild(victoryOverlay);
+            });
+        }
+
+        // Checks the user's answer
+        function checkAnswer() {
+            const userAnswer = userAnswerInput.value.trim();
+            const [userNumStr, userDenStr] = userAnswer.split('/');
+            const userNum = parseInt(userNumStr);
+            const userDen = parseInt(userDenStr);
+
+            if (isNaN(userNum) || isNaN(userDen) || userDen === 0) {
+                feedbackMessageEl.textContent = 'Invalid format! Use num/den.';
+                feedbackMessageEl.className = 'incorrect';
+                return;
+            }
+
+            let correctNum, correctDen;
+            if (currentProblem.type === 'same') {
+                correctNum = currentProblem.num1 + currentProblem.num2;
+                correctDen = currentProblem.den1;
+            } else {
+                correctDen = currentProblem.den1 * currentProblem.den2;
+                correctNum = (currentProblem.num1 * currentProblem.den2) + (currentProblem.num2 * currentProblem.den1);
+            }
+
+            // Check for mathematical equivalence
+            if (userNum * correctDen === correctNum * userDen) {
+                // --- CORRECT ANSWER LOGIC ---
+                feedbackMessageEl.textContent = 'Correct!';
+                feedbackMessageEl.className = 'correct';
+                mana += MANA_PER_CORRECT_ANSWER;
+                manaCountEl.textContent = mana;
+                currentQuestionNumber++;
+
+                if (currentQuestionNumber === TOTAL_QUESTIONS) {
+                    setTimeout(showVictoryScreen, 1000); // Wait 1s to show "Correct!" then play final video
+                    return;
+                }
+
+                const postCorrectVideoAction = () => {
+                    gameContainer.style.display = 'block';
+                    updateProgress();
+                    if (currentQuestionNumber === BOSS_LEVEL_START) {
+                        triggerBossMode();
+                    }
+                    rewindBtn.disabled = mana < REWIND_COST;
+                    generateProblem();
+                };
+                
+                setTimeout(() => playVideo('video1a.mp4', postCorrectVideoAction), 1000);
+
+            } else {
+                // --- INCORRECT ANSWER LOGIC ---
+                feedbackMessageEl.textContent = 'Incorrect! Mana lost!';
+                feedbackMessageEl.className = 'incorrect';
+                mana = Math.max(0, mana - MANA_PENALTY);
+                manaCountEl.textContent = mana;
+                rewindBtn.disabled = mana < REWIND_COST;
+
+                const postWrongVideoAction = () => {
+                    gameContainer.style.display = 'block';
+                    userAnswerInput.focus();
+                };
+
+                setTimeout(() => playVideo('video2a.mp4', postWrongVideoAction), 1000);
+            }
+        }
+        
+        // Activates the Chrono-Shift superpower
+        function activateRewind() {
+            if (mana >= REWIND_COST) {
+                mana -= REWIND_COST;
+                manaCountEl.textContent = mana;
+                rewindBtn.disabled = true;
+                problemHistory.pop();
+                if (problemHistory.length > 0) {
+                    currentProblem = problemHistory.pop();
+                    document.getElementById('fraction1').innerHTML = createFractionElement(currentProblem.num1, currentProblem.den1);
+                    document.getElementById('fraction2').innerHTML = createFractionElement(currentProblem.num2, currentProblem.den2);
+                    problemHistory.push(currentProblem);
+                } else {
+                    generateProblem();
+                }
+                feedbackMessageEl.textContent = 'Chrono-Shift Activated!';
+            }
+        }
+
+        // Event Listeners
+        submitBtn.addEventListener('click', checkAnswer);
+        userAnswerInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') checkAnswer();
+        });
+        rewindBtn.addEventListener('click', activateRewind);
+
+        // Initial game start
+        updateProgress();
+        generateProblem();
+    </script>
+</body>
+</html>

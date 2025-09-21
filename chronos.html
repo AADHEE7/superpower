@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono-Craft: Fractions</title>
+    <style>
+        /* A more advanced and visually appealing CSS */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        body {
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #0a0a1a, #1a1a33);
+            color: #d1d1f0;
+            text-align: center;
+            overflow: hidden; /* Prevent visual glitches during animations */
+        }
+
+        .game-container {
+            background-color: #1a1a2e;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.7);
+            width: 90%;
+            max-width: 700px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: warpIn 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+        }
+
+        @keyframes warpIn {
+            0% { transform: scale(0.8) translateY(-50px) rotateX(15deg); opacity: 0; }
+            100% { transform: scale(1) translateY(0) rotateX(0deg); opacity: 1; }
+        }
+
+        h1 {
+            color: #6a5acd;
+            font-size: 2.8em;
+            text-shadow: 0 0 15px #6a5acd;
+            margin-bottom: 30px;
+        }
+
+        .chronos-display {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            color: #9370db;
+        }
+
+        .problem-area {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 40px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fraction-group {
+            display: inline-block;
+            margin: 0 15px;
+            position: relative;
+        }
+        .fraction-line {
+            display: block;
+            border-bottom: 4px solid #d1d1f0;
+            padding-bottom: 5px;
+            margin: 0;
+            line-height: 0;
+        }
+        .fraction-numerator, .fraction-denominator {
+            display: block;
+            font-size: 0.8em;
+            margin: 0;
+            padding: 0 5px;
+        }
+        .operator {
+            font-size: 1em;
+            padding: 0 10px;
+            color: #d1d1f0;
+        }
+
+        .input-area {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        #user-answer {
+            padding: 15px;
+            border: 2px solid #3d3b51;
+            border-radius: 10px;
+            background-color: #2b2b3f;
+            color: #d1d1f0;
+            font-size: 1.2em;
+            outline: none;
+            text-align: center;
+            width: 200px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        #user-answer::placeholder { color: #8c8cbe; }
+        #user-answer:focus {
+            border-color: #6a5acd;
+            box-shadow: 0 0 10px rgba(106, 90, 205, 0.5);
+        }
+
+        .game-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+        }
+        .game-btn:hover {
+            transform: translateY(-3px);
+        }
+
+        #submit-btn {
+            background-color: #5d3fd3;
+        }
+        #submit-btn:hover { background-color: #4a32b8; }
+
+        #rewind-btn {
+            background-color: #ff6347;
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        #rewind-btn:not([disabled]) {
+            opacity: 1;
+            cursor: pointer;
+            background-color: #ff6347;
+            animation: pulseRewind 1s infinite;
+        }
+        #rewind-btn:not([disabled]):hover { background-color: #d84a32; }
+
+        @keyframes pulseRewind {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 99, 71, 0.7); }
+            50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(255, 99, 71, 1); }
+        }
+
+        .feedback-area {
+            height: 40px;
+            font-size: 1.3em;
+            font-weight: bold;
+            text-shadow: 0 0 10px;
+        }
+        
+        #correct-msg {
+            color: #4CAF50;
+            text-shadow: 0 0 10px #4CAF50;
+            animation: flashCorrect 0.8s ease-in-out;
+        }
+        #incorrect-msg {
+            color: #e57373;
+            text-shadow: 0 0 10px #e57373;
+            animation: shake 0.5s;
+        }
+        @keyframes flashCorrect {
+            0% { opacity: 0; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .rewind-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(106, 90, 205, 0.2);
+            backdrop-filter: blur(10px);
+            opacity: 0;
+            animation: rewindVisual 1s forwards;
+            pointer-events: none;
+            z-index: 10;
+        }
+        @keyframes rewindVisual {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Chrono-Craft: Fractions</h1>
+        <div class="chronos-display">
+            Chronos: <span id="chronos-count">0</span>
+        </div>
+
+        <div class="problem-area">
+            <span class="fraction-group" id="fraction1"></span>
+            <span class="operator">+</span>
+            <span class="fraction-group" id="fraction2"></span>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="user-answer" placeholder="e.g. 3/4">
+            <button class="game-btn" id="submit-btn">Submit</button>
+        </div>
+
+        <div class="feedback-area">
+            <p id="feedback-message"></p>
+        </div>
+
+        <div class="superpower-area">
+            <button class="game-btn" id="rewind-btn" disabled>Temporal Rewind</button>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript Logic
+        let chronos = 0;
+        let problemHistory = [];
+        let currentProblem = null;
+
+        const CHRONOS_PER_CORRECT_ANSWER = 15;
+        const REWIND_COST = 50;
+        const CHRONOS_PENALTY = 5;
+
+        const chronosCountEl = document.getElementById('chronos-count');
+        const problemArea = document.querySelector('.problem-area');
+        const feedbackMessageEl = document.getElementById('feedback-message');
+        const userAnswerInput = document.getElementById('user-answer');
+        const submitBtn = document.getElementById('submit-btn');
+        const rewindBtn = document.getElementById('rewind-btn');
+
+        // Function to create a fraction HTML element
+        function createFractionElement(numerator, denominator) {
+            return `
+                <div class="fraction-line">
+                    <span class="fraction-numerator">${numerator}</span>
+                </div>
+                <span class="fraction-denominator">${denominator}</span>
+            `;
+        }
+
+        // Function to find the greatest common divisor (GCD) to simplify fractions
+        function gcd(a, b) {
+            return b === 0 ? a : gcd(b, a % b);
+        }
+
+        // Function to generate and display a new problem
+        function generateProblem() {
+            let numerator1, numerator2, denominator1, denominator2;
+            const problemType = Math.random() < 0.7 ? 'same' : 'different';
+
+            if (problemType === 'same') {
+                denominator1 = denominator2 = Math.floor(Math.random() * 8) + 2; // Denominators from 2 to 9
+                numerator1 = Math.floor(Math.random() * (denominator1 - 1)) + 1;
+                numerator2 = Math.floor(Math.random() * (denominator2 - 1)) + 1;
+                while (numerator1 + numerator2 >= denominator1) {
+                    numerator1 = Math.floor(Math.random() * (denominator1 - 1)) + 1;
+                    numerator2 = Math.floor(Math.random() * (denominator2 - 1)) + 1;
+                }
+            } else {
+                denominator1 = Math.floor(Math.random() * 4) + 2; // Small denominators for easier different denominator problems
+                denominator2 = Math.floor(Math.random() * 4) + 2;
+                while (denominator1 === denominator2) {
+                    denominator2 = Math.floor(Math.random() * 4) + 2;
+                }
+                numerator1 = Math.floor(Math.random() * (denominator1 - 1)) + 1;
+                numerator2 = Math.floor(Math.random() * (denominator2 - 1)) + 1;
+            }
+
+            const fraction1El = document.getElementById('fraction1');
+            const fraction2El = document.getElementById('fraction2');
+            fraction1El.innerHTML = createFractionElement(numerator1, denominator1);
+            fraction2El.innerHTML = createFractionElement(numerator2, denominator2);
+
+            currentProblem = {
+                numerator1,
+                denominator1,
+                numerator2,
+                denominator2,
+                type: problemType
+            };
+            
+            problemHistory.push(currentProblem);
+
+            feedbackMessageEl.textContent = '';
+            userAnswerInput.value = '';
+        }
+
+        // Function to check the user's answer
+        function checkAnswer() {
+            const userAnswer = userAnswerInput.value;
+            const [userNumStr, userDenStr] = userAnswer.split('/');
+            const userNum = parseInt(userNumStr);
+            const userDen = parseInt(userDenStr);
+
+            // Handle invalid input like "abc" or "5/"
+            if (isNaN(userNum) || isNaN(userDen)) {
+                feedbackMessageEl.textContent = 'Invalid format! Use num/den.';
+                feedbackMessageEl.id = 'incorrect-msg';
+                setTimeout(() => { feedbackMessageEl.id = ''; feedbackMessageEl.textContent = ''; }, 2000);
+                return;
+            }
+
+            let correctNum, correctDen;
+
+            // Calculate the unsimplified sum first
+            if (currentProblem.type === 'same') {
+                correctNum = currentProblem.numerator1 + currentProblem.numerator2;
+                correctDen = currentProblem.denominator1;
+            } else { // different denominator
+                correctDen = currentProblem.denominator1 * currentProblem.denominator2;
+                correctNum = (currentProblem.numerator1 * currentProblem.denominator2) + (currentProblem.numerator2 * currentProblem.denominator1);
+            }
+            
+            // Check for mathematical equivalence.
+            // Two fractions a/b and c/d are equivalent if a*d = b*c.
+            // This correctly validates "1/2" for an answer of "2/4".
+            if (userDen !== 0 && (userNum * correctDen === correctNum * userDen)) {
+                feedbackMessageEl.textContent = 'Correct!';
+                feedbackMessageEl.id = 'correct-msg';
+                chronos += CHRONOS_PER_CORRECT_ANSWER;
+                chronosCountEl.textContent = chronos;
+                
+                if (chronos >= REWIND_COST) {
+                    rewindBtn.disabled = false;
+                }
+                
+                setTimeout(() => {
+                    feedbackMessageEl.id = '';
+                    generateProblem();
+                }, 1500);
+            } else {
+                feedbackMessageEl.textContent = 'Incorrect! Chronos Lost!';
+                feedbackMessageEl.id = 'incorrect-msg';
+                chronos = Math.max(0, chronos - CHRONOS_PENALTY);
+                chronosCountEl.textContent = chronos;
+                rewindBtn.disabled = chronos < REWIND_COST;
+            }
+        }
+        
+        // Function to activate the Temporal Rewind superpower
+        function activateRewind() {
+            if (chronos >= REWIND_COST) {
+                chronos -= REWIND_COST;
+                chronosCountEl.textContent = chronos;
+                rewindBtn.disabled = true;
+
+                // Visual Rewind Effect
+                const rewindEffectDiv = document.createElement('div');
+                rewindEffectDiv.classList.add('rewind-effect');
+                document.body.appendChild(rewindEffectDiv);
+                setTimeout(() => document.body.removeChild(rewindEffectDiv), 1000);
+
+                // Rewind the game state by one problem
+                problemHistory.pop(); // Remove the current failed problem
+                if (problemHistory.length > 0) {
+                    currentProblem = problemHistory.pop();
+                    const fraction1El = document.getElementById('fraction1');
+                    const fraction2El = document.getElementById('fraction2');
+                    fraction1El.innerHTML = createFractionElement(currentProblem.numerator1, currentProblem.denominator1);
+                    fraction2El.innerHTML = createFractionElement(currentProblem.numerator2, currentProblem.denominator2);
+                } else {
+                    generateProblem();
+                }
+
+                feedbackMessageEl.textContent = 'Temporal Rewind Activated!';
+                feedbackMessageEl.id = 'rewind-msg';
+            }
+        }
+
+        // Event Listeners
+        submitBtn.addEventListener('click', checkAnswer);
+        userAnswerInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+        rewindBtn.addEventListener('click', activateRewind);
+
+        // Initial game start
+        generateProblem();
+    </script>
+</body>
+</html>

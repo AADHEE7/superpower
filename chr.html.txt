@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrono-Mage vs. The Time Dragon</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        :root {
+            --primary-glow: #6a5acd;
+            --primary-bg: #1a1a2e;
+            --text-color: #d1d1f0;
+            --boss-glow: #ff4500;
+            --boss-gradient: linear-gradient(135deg, #2a0a0a, #4d1a1a);
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: var(--boss-gradient); /* Start in boss mode */
+            color: var(--text-color);
+            text-align: center;
+            overflow: hidden;
+            transition: background 1s ease-in-out;
+        }
+
+        .game-container {
+            background-color: var(--primary-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 40px var(--boss-glow); /* Start with boss glow */
+            width: 90%;
+            max-width: 700px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: warpIn 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+            border: 3px solid var(--boss-glow); /* Start with boss border */
+            transition: box-shadow 1s, border-color 1s;
+        }
+        
+        @keyframes warpIn {
+            0% { transform: scale(0.8) translateY(-50px) rotateX(15deg); opacity: 0; }
+            100% { transform: scale(1) translateY(0) rotateX(0deg); opacity: 1; }
+        }
+
+        h1 {
+            color: var(--boss-glow); /* Start with boss color */
+            font-size: 2.5em;
+            text-shadow: 0 0 15px var(--boss-glow); /* Start with boss shadow */
+            margin-bottom: 20px;
+            transition: color 1s, text-shadow 1s;
+        }
+
+        .story-area {
+            font-size: 1.1em;
+            color: #ffb3b3; /* Lighter red for boss text */
+            min-height: 40px;
+            margin-bottom: 15px;
+        }
+        
+        /* Dragon HP Bar Styles */
+        .boss-health-container {
+            width: 100%;
+            background-color: #402020;
+            border: 2px solid var(--boss-glow);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 3px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .boss-health-bar {
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(90deg, #ff4500, #ff6347);
+            border-radius: 7px;
+            transition: width 0.5s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        /* Mage Power Bar (previously progress-bar) */
+        .power-bar-container {
+            width: 100%;
+            background-color: #2b2b3f;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            border: 2px solid var(--primary-glow);
+        }
+        .power-bar {
+            width: 0%;
+            height: 10px;
+            background: linear-gradient(90deg, #9370db, #6a5acd);
+            border-radius: 10px;
+            transition: width 0.5s ease-out, background 1s;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .power-display {
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            color: #9370db;
+            text-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        .problem-area {
+            font-size: 3.5em;
+            font-weight: bold;
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .fraction-group { display: inline-block; margin: 0 15px; position: relative; }
+        .fraction-line { display: block; border-bottom: 4px solid var(--text-color); padding-bottom: 5px; margin: 0; line-height: 0; }
+        .fraction-numerator, .fraction-denominator { display: block; font-size: 0.8em; margin: 0; padding: 0 5px; }
+        .operator { font-size: 1em; padding: 0 10px; color: var(--text-color); }
+
+        .input-area { display: flex; justify-content: center; gap: 15px; margin-bottom: 25px; }
+
+        #user-answer { padding: 15px; border: 2px solid #3d3b51; border-radius: 10px; background-color: #2b2b3f; color: var(--text-color); font-size: 1.2em; outline: none; text-align: center; width: 200px; transition: border-color 0.3s, box-shadow 0.3s; }
+        #user-answer::placeholder { color: #8c8cbe; }
+        #user-answer:focus { border-color: var(--boss-glow); box-shadow: 0 0 10px rgba(255, 69, 0, 0.5); }
+
+        .game-btn { padding: 15px 30px; border: none; border-radius: 10px; font-size: 1.2em; cursor: pointer; transition: transform 0.2s, background-color 0.3s; color: white; font-family: 'Orbitron', sans-serif; text-transform: uppercase; }
+        .game-btn:hover { transform: translateY(-3px); }
+
+        #submit-btn { background-color: #c0392b; }
+        #submit-btn:hover { background-color: #e74c3c; }
+        #submit-btn:disabled { background-color: #3d3b51; cursor: not-allowed; }
+
+        #chrono-shift-btn { background-color: #6a5acd; }
+        #chrono-shift-btn:not([disabled]) { cursor: pointer; animation: pulseRewind 1s infinite; }
+        #chrono-shift-btn:not([disabled]):hover { background-color: #5d3fd3; }
+        #chrono-shift-btn[disabled] { background-color: #3d3b51; cursor: not-allowed; opacity: 0.6; }
+
+        @keyframes pulseRewind { 0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(106, 90, 205, 0.7); } 50% { transform: scale(1.05); box-shadow: 0 0 25px rgba(106, 90, 205, 1); } }
+
+        .feedback-area { height: 40px; font-size: 1.3em; font-weight: bold; }
+        #feedback-message.correct { color: #4CAF50; text-shadow: 0 0 10px #4CAF50; animation: flashCorrect 0.8s ease-in-out; }
+        #feedback-message.incorrect { color: #e57373; text-shadow: 0 0 10px #e57373; animation: shake 0.5s; }
+        @keyframes flashCorrect { 0% { opacity: 0; transform: scale(0.5); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+
+        .victory-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 10, 26, 0.9);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; animation: fadeIn 1s;
+        }
+        .victory-box { padding: 50px; background-color: #1a1a33; border-radius: 20px; box-shadow: 0 0 50px #4CAF50; text-align: center; }
+        .victory-box h2 { font-size: 3em; color: #4CAF50; text-shadow: 0 0 20px #4CAF50; }
+        .victory-box p { font-size: 1.5em; max-width: 600px; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .video-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: black;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 200;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 id="game-title">The Final Paradox</h1>
+        
+        <div class="story-area" id="story-text">
+            Face the Time Dragon! Each correct answer weakens it and fuels your temporal power.
+        </div>
+        
+        <div class="boss-health-container">
+            <div class="boss-health-bar" id="dragon-hp-bar">DRAGON HP</div>
+        </div>
+        
+        <div class="power-bar-container">
+            <div class="power-bar" id="mage-power-bar"></div>
+        </div>
+
+        <div class="power-display">
+            Mage Power: <span id="mage-power-count">0</span>
+        </div>
+
+        <div class="problem-area">
+            <span class="fraction-group" id="fraction1"></span>
+            <span class="operator">+</span>
+            <span class="fraction-group" id="fraction2"></span>
+        </div>
+
+        <div class="input-area">
+            <input type="text" id="user-answer" placeholder="e.g. 3/4">
+            <button class="game-btn" id="submit-btn">Strike</button>
+        </div>
+
+        <div class="feedback-area">
+            <p id="feedback-message"></p>
+        </div>
+
+        <div class="superpower-area">
+            <button class="game-btn" id="chrono-shift-btn" disabled>Chrono-Shift</button>
+        </div>
+    </div>
+
+    <div class="video-overlay" id="video-overlay" style="display: none;">
+        <video id="video-player" width="90%" height="90%">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <script>
+        // Game State and Constants
+        let magePower = 0;
+        let dragonHP = 100;
+        let chronoShiftUses = 1;
+        let problemHistory = [];
+        let currentProblem = null;
+        const TOTAL_QUESTIONS = 10;
+        const MAX_POWER = 100;
+        const MAX_HP = 100;
+        const POWER_GAIN = MAX_POWER / TOTAL_QUESTIONS;
+        const DRAGON_HP_LOSS = MAX_HP / TOTAL_QUESTIONS;
+        const POWER_PENALTY = 5;
+
+        // DOM Elements
+        const magePowerCountEl = document.getElementById('mage-power-count');
+        const magePowerBarEl = document.getElementById('mage-power-bar');
+        const dragonHpBarEl = document.getElementById('dragon-hp-bar');
+        const feedbackMessageEl = document.getElementById('feedback-message');
+        const userAnswerInput = document.getElementById('user-answer');
+        const submitBtn = document.getElementById('submit-btn');
+        const chronoShiftBtn = document.getElementById('chrono-shift-btn');
+        const storyTextEl = document.getElementById('story-text');
+        const gameContainer = document.querySelector('.game-container');
+        const videoOverlay = document.getElementById('video-overlay');
+        const videoPlayer = document.getElementById('video-player');
+
+
+        // Creates the HTML for a fraction
+        function createFractionElement(numerator, denominator) {
+            return `
+                <div class="fraction-line">
+                    <span class="fraction-numerator">${numerator}</span>
+                </div>
+                <span class="fraction-denominator">${denominator}</span>
+            `;
+        }
+        
+        // Updates all UI elements based on the current game state
+        function updateUI() {
+            // Update Mage Power
+            magePowerCountEl.textContent = magePower;
+            const powerPercent = (magePower / MAX_POWER) * 100;
+            magePowerBarEl.style.width = `${powerPercent}%`;
+
+            // Update Dragon HP
+            const hpPercent = (dragonHP / MAX_HP) * 100;
+            dragonHpBarEl.style.width = `${hpPercent}%`;
+            
+            // Update Chrono-Shift Button
+            chronoShiftBtn.disabled = chronoShiftUses <= 0;
+            chronoShiftBtn.textContent = `Chrono-Shift (${chronoShiftUses})`;
+        }
+        
+        function playVideo(videoSrc, onEndedCallback) {
+            submitBtn.disabled = true;
+            gameContainer.style.display = 'none';
+            videoOverlay.style.display = 'flex';
+            videoPlayer.src = videoSrc;
+            videoPlayer.play();
+
+            const onVideoEnd = () => {
+                videoOverlay.style.display = 'none';
+                videoPlayer.removeEventListener('ended', onVideoEnd);
+
+                if (onEndedCallback) {
+                    onEndedCallback();
+                }
+                submitBtn.disabled = false;
+            };
+
+            videoPlayer.addEventListener('ended', onVideoEnd);
+        }
+
+        // Generates a new problem
+        function generateProblem() {
+            let num1, num2, den1, den2;
+            let problemType = (magePower < MAX_POWER / 2) ? 'same' : 'different';
+            
+            // Randomly sprinkle in different denominators early on for variety
+            if (Math.random() > 0.7 && magePower < MAX_POWER / 2) {
+                 problemType = 'different';
+            }
+
+            if (problemType === 'same') {
+                den1 = den2 = Math.floor(Math.random() * 8) + 3; 
+                num1 = Math.floor(Math.random() * (den1 - 1)) + 1;
+                num2 = Math.floor(Math.random() * (den2 - 1)) + 1;
+                while (num1 + num2 >= den1) {
+                    num1 = Math.floor(Math.random() * (den1 - 1)) + 1;
+                    num2 = Math.floor(Math.random() * (den2 - 1)) + 1;
+                }
+            } else { 
+                den1 = Math.floor(Math.random() * 5) + 2; 
+                den2 = Math.floor(Math.random() * 5) + 3; 
+                while (den1 === den2) {
+                    den2 = Math.floor(Math.random() * 5) + 3;
+                }
+                num1 = Math.floor(Math.random() * (den1 - 1)) + 1;
+                num2 = Math.floor(Math.random() * (den2 - 1)) + 1;
+            }
+
+            document.getElementById('fraction1').innerHTML = createFractionElement(num1, den1);
+            document.getElementById('fraction2').innerHTML = createFractionElement(num2, den2);
+
+            currentProblem = { num1, den1, num2, den2, type: problemType };
+            problemHistory.push(currentProblem);
+
+            feedbackMessageEl.textContent = '';
+            userAnswerInput.value = '';
+            userAnswerInput.focus();
+        }
+
+        function showVictoryScreen() {
+            playVideo('video3.mp4', () => {
+                document.body.innerHTML = ''; // Clear the body
+                const victoryOverlay = document.createElement('div');
+                victoryOverlay.classList.add('victory-overlay');
+                victoryOverlay.innerHTML = `
+                    <div class="victory-box">
+                        <h2>TIMELINE RESTORED</h2>
+                        <p>Silence falls. The Dragon's roar is but an echo in a timeline you now command. Reality itself bends to your will. You are the Master of Ages.</p>
+                    </div>
+                `;
+                document.body.appendChild(victoryOverlay);
+            });
+        }
+
+        // Checks the user's answer
+        function checkAnswer() {
+            const userAnswer = userAnswerInput.value.trim();
+            const [userNumStr, userDenStr] = userAnswer.split('/');
+            const userNum = parseInt(userNumStr);
+            const userDen = parseInt(userDenStr);
+
+            if (isNaN(userNum) || isNaN(userDen) || userDen === 0) {
+                feedbackMessageEl.textContent = 'Invalid format! Use num/den.';
+                feedbackMessageEl.className = 'incorrect';
+                return;
+            }
+
+            let correctNum, correctDen;
+            if (currentProblem.type === 'same') {
+                correctNum = currentProblem.num1 + currentProblem.num2;
+                correctDen = currentProblem.den1;
+            } else {
+                correctDen = currentProblem.den1 * currentProblem.den2;
+                correctNum = (currentProblem.num1 * currentProblem.den2) + (currentProblem.num2 * currentProblem.den1);
+            }
+
+            if (userNum * correctDen === correctNum * userDen) {
+                // --- CORRECT ANSWER LOGIC ---
+                feedbackMessageEl.textContent = 'Direct Hit!';
+                feedbackMessageEl.className = 'correct';
+                magePower = Math.min(MAX_POWER, magePower + POWER_GAIN);
+                dragonHP = Math.max(0, dragonHP - DRAGON_HP_LOSS);
+                
+                updateUI();
+                
+                if (magePower >= MAX_POWER && dragonHP <= 0) {
+                    setTimeout(showVictoryScreen, 1000);
+                    return;
+                }
+                
+                const postCorrectVideoAction = () => {
+                    gameContainer.style.display = 'block';
+                    generateProblem();
+                };
+                
+                setTimeout(() => playVideo('video1a.mp4', postCorrectVideoAction), 1000);
+
+            } else {
+                // --- INCORRECT ANSWER LOGIC ---
+                feedbackMessageEl.textContent = 'Temporal Backlash! Power Lost!';
+                feedbackMessageEl.className = 'incorrect';
+                magePower = Math.max(0, magePower - POWER_PENALTY);
+                updateUI();
+
+                const postWrongVideoAction = () => {
+                    gameContainer.style.display = 'block';
+                    userAnswerInput.focus();
+                };
+
+                setTimeout(() => playVideo('video2a.mp4', postWrongVideoAction), 1000);
+            }
+        }
+        
+        // Activates the Chrono-Shift superpower
+        function activateChronoShift() {
+            if (chronoShiftUses > 0) {
+                chronoShiftUses--;
+                updateUI();
+                
+                problemHistory.pop(); // Remove the current difficult problem
+                generateProblem(); // Generate a new (potentially easier) one
+                
+                feedbackMessageEl.textContent = 'Chrono-Shift Activated! Reality shifts!';
+                feedbackMessageEl.className = 'correct';
+            }
+        }
+
+        // Event Listeners
+        submitBtn.addEventListener('click', checkAnswer);
+        userAnswerInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') checkAnswer();
+        });
+        chronoShiftBtn.addEventListener('click', activateChronoShift);
+
+        // Initial game start
+        updateUI();
+        generateProblem();
+    </script>
+</body>
+</html>
